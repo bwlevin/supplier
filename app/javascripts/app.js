@@ -41,6 +41,50 @@ window.App = {
 
       self.refreshBalance();
       self.getCost();
+      self.getPossession();
+      self.getSerial();
+      self.getQuality();
+      self.setState();
+    });
+  },
+
+  setState: function() {
+    var self = this;
+    var state = "AWAITING COST"
+
+    var meta;
+    MetaCoin.deployed().then(function(instance){
+      meta=instance;
+      return meta.getApproval.call();
+    }).then(function(value){
+      if (value == true) {
+        state = "COST APPROVED. AWAITING SHIPMENT";
+      }
+      else if ((parseInt(document.getElementById("current_cost").innerHTML) > 0)) {
+        state = "AWAITING COST APPROVAL";
+      }
+      document.getElementById("state").innerHTML = state;
+      return meta.getShipped.call();
+    }).then(function (val) {
+      if (val == true) {
+        state = "PART SHIPPED. AWAITING DATA APPROVAL";
+      }
+      document.getElementById("state").innerHTML = state;
+      return meta.getDataApproval.call();
+    }).then(function(value){
+      if (value == true) {
+        state = "DATA APPROVED. AWAITING DELIVERY ACCEPTANCE";
+      }
+      document.getElementById("state").innerHTML = state;
+      return meta.getDelivered.call();
+    }).then(function (value) {
+      if (value == true) {
+        state = "DELIVERY COMPLETE. FUNDS TRANSFERRED";
+      }
+      document.getElementById("state").innerHTML = state;
+    }).catch(function (e) {
+      console.log(e);
+      self.setStatus("Error setting state; see log");
     });
   },
 
@@ -55,6 +99,21 @@ window.App = {
     var meta;
     MetaCoin.deployed().then(function(instance) {
       meta = instance;
+      return meta.getApproval.call();
+    }).then(function(value) {
+      if(value == true) {
+        document.getElementById("approved").removeAttribute("hidden");
+      }
+      return meta.getShipped.call();
+    }).then(function(value) {
+      if(value == true) {
+        document.getElementById("shipped").removeAttribute("hidden");
+      }
+      return meta.getDataApproval.call();
+    }).then(function(value){
+      if(value == true) {
+        document.getElementById("data_approved").removeAttribute("hidden");
+      }
       return meta.getBalance.call(account, {from: account});
     }).then(function(value) {
       var balance_element = document.getElementById("balance");
@@ -71,13 +130,69 @@ window.App = {
     var meta;
     MetaCoin.deployed().then(function(instance) {
       meta = instance;
-      return meta.getSerial.call();
+      return meta.getSerial.call({from:account});
     }).then(function(value) {
       var serial_no = document.getElementById("serial");
       serial_no.value = value.valueOf();
     }).catch(function(e) {
+      alert("Unable to perform action.");
       console.log(e);
       self.setStatus("Error fetching serial number. See log.");
+    });
+  },
+
+  setSerial: function(value) {
+    var self = this;
+    var new_serial = parseInt(document.getElementById("serial_no").value);
+
+    var meta;
+    MetaCoin.deployed().then(function(instance) {
+      meta = instance;
+      return meta.updateSerial(new_serial, {from: account});
+    }).then(function () {
+      self.setStatus("Serial number set!");
+      document.getElementById("serial_no").value = "";
+      window.location.reload();
+    }).catch(function (e) {
+      console.log(e);
+      if (alert("Error setting serial number; see log.")) {}
+      else window.location.reload();
+    });
+  },
+
+  setQuality: function(value) {
+    var self = this;
+    var new_quality = parseInt(document.getElementById("new_quality").value);
+
+    var meta;
+    MetaCoin.deployed().then(function(instance) {
+      meta = instance;
+      return meta.updateQuality(new_quality, {from: account});
+    }).then(function () {
+      self.setStatus("Quality value set!");
+      document.getElementById("new_quality").value="";
+      window.location.reload();
+    }).catch(function (e) {
+      if(alert("Error setting quality; see log.")){}
+      else window.location.reload();
+      console.log(e);
+    });
+  },
+
+
+  getPossession: function() {
+    var self = this;
+
+    var meta;
+    MetaCoin.deployed().then(function(instance) {
+      meta = instance;
+      return meta.getPossession.call();
+    }).then(function(value) {
+      var possession = document.getElementById("current_owner");
+      possession.innerHTML = value.valueOf();
+    }).catch(function(e) {
+      console.log(e);
+      self.setStatus("Error fetching current owner. See log.");
     });
   },
 
@@ -87,11 +202,12 @@ window.App = {
     var meta;
     MetaCoin.deployed().then(function(instance) {
       meta = instance;
-      return meta.getQuality.call();
+      return meta.getQuality.call({from:account});
     }).then(function(value) {
       var serial_no = document.getElementById("quality");
       serial_no.value = value.valueOf();
     }).catch(function(e) {
+      alert("Unable to perform action.");
       console.log(e);
       self.setStatus("Error fetching quality value. See log.");
     });
@@ -110,6 +226,25 @@ window.App = {
     }).catch(function(e) {
       console.log(e);
       self.setStatus("Error fetching cost. See log.");
+    });
+  },
+
+  setCost: function (cost) {
+    var self = this;
+    var new_cost = parseInt(document.getElementById("cost").value);
+
+    var meta;
+    MetaCoin.deployed().then(function (instance) {
+      meta = instance;
+      return meta.setCost(new_cost, {from: account});
+    }).then(function() {
+      self.setStatus("Price set. Awaiting approval.");
+      self.getCost();
+      window.location.reload();
+    }).catch(function (e) {
+      console.log(e);
+      if (alert("Error setting cost; see log")){}
+      else window.location.reload();
     });
   },
 
@@ -134,59 +269,6 @@ window.App = {
     });
   },
 
-  setCost: function(cost) {
-    var self = this;
-    var cost = parseInt(document.getElementById("cost").value);
-    var current_cost = document.getElementById("current_cost");
-    current_cost.innerHTML = cost;
-
-    var meta;
-    MetaCoin.deployed().then(function(instance) {
-      meta = instance;
-      return meta.setCost(cost, {from: account});
-    }).then(function () {
-      self.setStatus("Cost set!");
-      document.getElementById("cost").value="";
-    }).catch(function(e) {
-      console.log(e);
-      self.setStatus("Error setting cost; see log.");
-    });
-  },
-
-  setSerial: function(value) {
-    var self = this;
-    var new_serial = parseInt(document.getElementById("serial_no").value);
-
-    var meta;
-    MetaCoin.deployed().then(function(instance) {
-      meta = instance;
-      return meta.updateSerial(new_serial, {from: account});
-    }).then(function () {
-      self.setStatus("Serial number set!");
-      document.getElementById("serial_no").value = "";
-    }).catch(function (e) {
-      console.log(e);
-      self.setStatus("Error setting serial number; see log.");
-    });
-  },
-
-  setQuality: function(value) {
-    var self = this;
-    var new_quality = parseInt(document.getElementById("new_quality").value);
-
-    var meta;
-    MetaCoin.deployed().then(function(instance) {
-      meta = instance;
-      return meta.updateQuality(new_quality, {from: account});
-    }).then(function () {
-      self.setStatus("Quality value set!");
-      document.getElementById("new_quality").value="";
-    }).catch(function (e) {
-      console.log(e);
-      self.setStatus("Error setting quality; see log.");
-    });
-  },
-
   addFunds: function() {
     var self = this;
 
@@ -201,10 +283,62 @@ window.App = {
     }).then(function() {
       self.setStatus("Funds added!");
       self.refreshBalance();
+      document.getElementById("amount").value="";
     }).catch(function(e) {
       console.log(e);
       self.setStatus("Error adding funds; see log.");
     });
+  },
+
+  approvePrice: function() {
+    var self = this;
+
+    var meta;
+    MetaCoin.deployed().then(function (instance) {
+      meta = instance;
+      return meta.approvePrice({from: account});
+    }).then(function() {
+      self.setStatus("Price approved. Supplier can initiate shipment.");
+      window.location.reload();
+    }).catch(function (e) {
+      console.log(e);
+      alert("Unable to perform action.");
+      self.setStatus("Error approving price; see log.");
+    });
+  },
+
+  shipPart: function() {
+    var self = this;
+
+    var meta;
+    MetaCoin.deployed().then(function(instance){
+      meta=instance;
+      return meta.shipPart({from:account});
+    }).then(function() {
+      self.setStatus("Part shipped. Awaiting delivery.");
+      window.location.reload();
+    }).catch(function(e){
+      console.log(e);
+      alert("Unable to perform action");
+      self.setStatus("Error shipping part; see log.");
+    });
+  },
+
+  approveData: function() {
+    var self = this;
+
+    var meta;
+    MetaCoin.deployed().then(function(instance) {
+      meta=instance;
+      return meta.approveData({from:account});
+    }).then(function(){
+      self.setStatus("Part data confirmed. Please accept delivery of part now.");
+      document.getElementById("data_approved").removeAttribute("hidden");
+    }).catch(function(e){
+      console.log(e);
+      if(alert("Unable to approve data; see log.")){}
+      else window.location.reload();
+    })
   },
 
   takeDelivery: function() {
@@ -221,9 +355,11 @@ window.App = {
     }).then(function() {
       self.setStatus("Part Delivered. Funds Transferred.");
       self.refreshBalance();
+      self.getPossession();
     }).catch(function(e) {
       console.log(e);
-      self.setStatus("Error taking delivery. See log. Ensure sufficient funds have been added and try again.");
+      if(alert("Error taking delivery. See log. Ensure sufficient funds have been added and try again.")){}
+      else window.location.reload();
     });
   }
 };

@@ -23,10 +23,9 @@ button {
 }
 
 h1, h2 {
-  display: inline-block;
   vertical-align: middle;
   margin-top: 0px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 h2 {
@@ -44,11 +43,12 @@ h3 {
 
 #pagewrap {
   padding: 5px;
-  width: 1030px;
-  margin: 50px auto;
+  width: 1300px;
+  margin: 20px auto;
 }
 header {
-  height: 140px;
+  height: 200px;
+  width: 1280px;
   padding: 0 15px 80px;
 }
 #content {
@@ -93,6 +93,10 @@ header, #content, #middle, #sidebar {
 
 #pagewrap, header, #content, #middle, #sidebar, #fourth, footer {
   border: solid 1px #ccc;
+}
+
+#serial_button {
+  margin-bottom: 5px;
 }
 
 .black {
