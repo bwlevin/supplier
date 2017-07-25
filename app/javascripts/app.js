@@ -361,6 +361,19 @@ window.App = {
       if(alert("Error taking delivery. See log. Ensure sufficient funds have been added and try again.")){}
       else window.location.reload();
     });
+  },
+
+  reset: function() {
+    var self = this;
+
+    var meta;
+    MetaCoin.deployed().then(function(instance) {
+      meta = instance;
+      return meta.reset({from:account});
+    }).catch(function(e){
+      console.log(e);
+      self.setStatus("Reset failed; see log");
+    });
   }
 };
 

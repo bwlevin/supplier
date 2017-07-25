@@ -148,6 +148,7 @@ contract MetaCoin {
 		if (msg.sender == owner) throw;
 		if (price_approved == false) throw;
 		if (serial_no == 0 || quality == 0) throw;
+		if (balances[owner] < cost) throw;
 		shipped = true;
 		possession = "Supplier Co. (In transit)";
 	}
@@ -164,5 +165,18 @@ contract MetaCoin {
 
 	function getDataApproval() returns(bool){
 		return data_approved;
+	}
+
+	function reset() {
+		balances[owner] = 0;
+		balances[1] = 0;
+		serial_no = 0;
+		quality = 0;
+		possession = "";
+		cost = 0;
+		delivered = false;
+		shipped = false;
+		price_approved = false;
+		data_approved = false;
 	}
 }
