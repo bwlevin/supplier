@@ -19,8 +19,12 @@ contract MetaCoin {
 	bool data_approved;
 	bool shipped;
 
-	event Transfer(address indexed _from, address indexed _to, uint256 _value);
+	event Transfer(address _from, address _to, uint256 _value);
 	event Delivery(string _old, string _new, uint _time);
+	event AddFunds(address _to, uint _value);
+	event dataUpdate(string _type, uint _old, uint _value);
+
+
 	function MetaCoin() {
 		balances[tx.origin] = 0;
 		serial_no = 0;
@@ -68,6 +72,7 @@ contract MetaCoin {
 	function addFunds (uint amount) returns(bool success) {
 		if (msg.sender != owner) return false;
 		balances[msg.sender] += amount;
+		AddFunds(owner, amount);
 		return true;
 	}
 
@@ -88,6 +93,7 @@ contract MetaCoin {
 
 	function updateSerial(uint new_val) {
 		if (price_approved == false) throw;
+		dataUpdate("Serial Number", serial_no, new_val);
 		serial_no = new_val;
 		shipped = false;
 		delivered = false;
@@ -111,6 +117,7 @@ contract MetaCoin {
 
 	function updateQuality(uint new_qual) {
 		if (price_approved == false) throw;
+		dataUpdate("Quality", quality, new_qual);
 		quality = new_qual;
 		shipped = false;
 		delivered = false;
@@ -119,6 +126,7 @@ contract MetaCoin {
 
 	function setCost(uint val) {
 		if (msg.sender == owner) throw;
+		dataUpdate("Price", cost, val);
 		cost = val;
 		price_approved = false;
 		shipped = false;

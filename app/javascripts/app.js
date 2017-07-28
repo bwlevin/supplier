@@ -50,7 +50,7 @@ window.App = {
 
   setState: function() {
     var self = this;
-    var state = "AWAITING COST"
+    var state = "AWAITING PRICE"
 
     var meta;
     MetaCoin.deployed().then(function(instance){
@@ -58,10 +58,10 @@ window.App = {
       return meta.getApproval.call();
     }).then(function(value){
       if (value == true) {
-        state = "COST APPROVED. AWAITING SHIPMENT";
+        state = "PRICE APPROVED. AWAITING SHIPMENT";
       }
       else if ((parseInt(document.getElementById("current_cost").innerHTML) > 0)) {
-        state = "AWAITING COST APPROVAL";
+        state = "AWAITING PRICE APPROVAL";
       }
       document.getElementById("state").innerHTML = state;
       return meta.getShipped.call();
@@ -351,7 +351,7 @@ window.App = {
     var meta;
     MetaCoin.deployed().then(function(instance) {
       meta = instance;
-      return meta.takeDelivery(receiver, "Airline Corp.", {from: account});
+      return meta.takeDelivery(receiver, "OEM Corp.", {from: account});
     }).then(function() {
       self.setStatus("Part Delivered. Funds Transferred.");
       self.refreshBalance();
